@@ -2,7 +2,7 @@
 """Solver for Shenzhen I/O's solitaire mini-game."""
 
 
-# pylint: disable=W0108, C0103
+# pylint: disable=C0103
 
 
 import hashlib
@@ -27,6 +27,7 @@ seed(123456)
 
 # Solver settings
 TRACEBACK_ENABLED = True
+VERBOSE = True
 DURATION = 0.15
 AUTOMOVE_DELAY = 0.3
 
@@ -34,7 +35,8 @@ AUTOMOVE_DELAY = 0.3
 CARD_DIR = 'cards/'
 
 # Move types
-PILE, UP_SPACES, DOWN_SPACES, GOAL_P, GOAL_S, CLEAR_D = 'P', 'U', 'D', 'G', 'W', 'X'
+PILE, UP_SPACES, DOWN_SPACES, GOAL_P, GOAL_S, CLEAR_D = (
+    'P', 'U', 'D', 'G', 'W', 'X')
 
 # Card types
 NUMBER, DRAGON, ROSE, CLEARED = 'N', 'D', 'R', 'C'
@@ -53,6 +55,7 @@ XTOPD = 152
 XSPACE0, XSPACE1 = 414, 426
 
 def mean(x1, x2):
+    """Integer average."""
     return (x1 + x2)/2
 
 X = mean(X0, X1)
@@ -216,9 +219,11 @@ class Board(object):
         assert sum(map(len, self.piles)) == 40
 
     def num_goals_started(self):
+        """Number of goal slots which at least have 1 card."""
         return len([g for g in self.goals if g])
 
     def read_orders(self, img=None, old_move=None, old_b=None):
+        """Update orders from screenshot or image."""
         if (old_b and old_move and
                 self.num_goals_started() == old_b.num_goals_started()):
             self.goals_order = old_b.goals_order
@@ -457,6 +462,7 @@ class Board(object):
         print '-' * 80
         board = self
         while board.previous:
+            # pylint: disable=E0633
             board, move = board.previous
             move_msg, _, _, _ = move
             print move_msg
@@ -560,7 +566,8 @@ class Board(object):
                         new_b = deepcopy(self)
                         new_b.piles[dst_idx].extend(new_b.piles[idx][idy:])
                         new_b.piles[idx] = new_b.piles[idx][:idy]
-                        yield new_b, ("Move %s (%s) to %s" % (card, idx + 1, dst_idx + 1),
+                        yield new_b, ("Move %s (%s) to %s" %
+                                      (card, idx + 1, dst_idx + 1),
                                       PILE, (idx, idy, dst_idx))
 
     def score(self):
@@ -590,7 +597,8 @@ class Board(object):
         return score
 
 
-def solve(board, verbose=True, traceback=True, print_tb_boards=True, timeout=None):
+def solve(board, verbose=True, traceback=True, print_tb_boards=True,
+          timeout=None):
     """Solve a board."""
     start = time.time()
 
@@ -614,8 +622,11 @@ def solve(board, verbose=True, traceback=True, print_tb_boards=True, timeout=Non
         # Print out status if necessary
         if verbose:
             if last_time is None or time.time() - last_time > 1:
-                sys.stdout.write("\rStates explored: %s\tLowest Score: %s\tElapsed time: %.2fs" % (
-                    num_states, lowest_score, time.time() - start) + ' ' * 5)
+                sys.stdout.write(
+                    "\rStates explored: %s\t"
+                    "Lowest Score: %s\t"
+                    "Elapsed time: %.2fs" % (num_states, lowest_score,
+                                             time.time() - start) + ' ' * 5)
                 sys.stdout.flush()
                 last_time = time.time()
         num_states += 1
@@ -648,47 +659,54 @@ def solve(board, verbose=True, traceback=True, print_tb_boards=True, timeout=Non
 
 
 def click_window():
-    print "Clicking window"
+    if VERBOSE:
+        print "Clicking window"
     pyautogui.moveTo(XNOWHERE, YNOWHERE)
     pyautogui.click()
 
 def move_piles(src_x, src_y, dst_x, dst_y):
-    print "Moving %s, %s to %s, %s" % (src_x + 1, src_y + 1, dst_x + 1, dst_y + 1)
+    if VERBOSE:
+        print "Moving %s, %s to %s, %s" % (src_x + 1, src_y + 1, dst_x + 1, dst_y + 1)
     pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
 
     pyautogui.dragTo(X + dst_x * XD, Y + dst_y * YD,
                      duration=DURATION, button='left')
 
 def move_to_spaces(src_x, src_y, dst_x):
-    print "Moving %s, %s to space %s" % (src_x + 1, src_y + 1, dst_x + 1)
+    if VERBOSE:
+        print "Moving %s, %s to space %s" % (src_x + 1, src_y + 1, dst_x + 1)
     pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
 
     pyautogui.dragTo(XSPACE + dst_x * XTOPD, YTOP,
                      duration=DURATION, button='left')
 
 def move_from_spaces(src_x, dst_x, dst_y):
-    print "Moving space %s to %s, %s" % (src_x + 1, dst_x + 1, dst_y + 1)
+    if VERBOSE:
+        print "Moving space %s to %s, %s" % (src_x + 1, dst_x + 1, dst_y + 1)
     pyautogui.moveTo(XSPACE + src_x * XTOPD, YTOP)
 
     pyautogui.dragTo(X + dst_x * XD, Y + dst_y * YD,
                      duration=DURATION, button='left')
 
 def move_goal_piles(src_x, src_y, dst_x):
-    print "Moving %s, %s to goal %s" % (src_x + 1, src_y + 1, dst_x + 1)
+    if VERBOSE:
+        print "Moving %s, %s to goal %s" % (src_x + 1, src_y + 1, dst_x + 1)
     pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
 
     pyautogui.dragTo(XTOP + dst_x * XTOPD, YTOP,
                      duration=DURATION, button='left')
 
 def move_goal_spaces(src_x, dst_x):
-    print "Moving space %s to goal %s" % (src_x + 1, dst_x + 1)
+    if VERBOSE:
+        print "Moving space %s to goal %s" % (src_x + 1, dst_x + 1)
     pyautogui.moveTo(XSPACE + src_x * XTOPD, YTOP)
 
     pyautogui.dragTo(XTOP + dst_x * XTOPD, YTOP,
                      duration=DURATION, button='left')
 
 def clear_dragon(color):
-    print "Clearing %s" % (color)
+    if VERBOSE:
+        print "Clearing %s" % (color)
     if color == RED:
         pyautogui.moveTo(XDRAGONR, YDRAGONR)
     elif color == GREEN:
@@ -700,7 +718,8 @@ def clear_dragon(color):
     pyautogui.mouseUp(button='left')
 
 def click_newgame():
-    print "Clicking newgame"
+    if VERBOSE:
+        print "Clicking newgame"
     pyautogui.moveTo(XNEWG, YNEWG)
     pyautogui.mouseDown(button='left')
     time.sleep(DURATION)
@@ -709,7 +728,8 @@ def click_newgame():
 
 
 def autosolve_game(timeout=None):
-    img = pyscreenshot.grab()
+    if VERBOSE:
+        img = pyscreenshot.grab()
     board = Board(img=img)
     print board
 
