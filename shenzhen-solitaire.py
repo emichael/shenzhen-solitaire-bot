@@ -14,7 +14,7 @@ from copy import deepcopy
 from Queue import PriorityQueue
 from random import seed, shuffle
 
-import pyautougi
+import pyautogui
 import pyscreenshot
 
 from PIL import Image
