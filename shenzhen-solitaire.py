@@ -121,7 +121,7 @@ class Card(object):
     CARD_NAMES = {}
     for file_name in os.listdir(CARD_DIR):
         imh = img_hash(Image.open(os.path.join(CARD_DIR, file_name)))
-        card_name = file_name.split('.')[0]
+        card_name = file_name.split('.')[0][:2]
         CARD_NAMES[imh] = card_name
 
     def __init__(self, ctype, color=None, number=None):
@@ -155,7 +155,7 @@ class Card(object):
 
     @classmethod
     def from_img(cls, img):
-        """Procude a card from a PIL image."""
+        """Produce a card from a PIL image."""
         imh = img_hash(img)
         if imh in cls.CARD_NAMES:
             return cls.from_str(cls.CARD_NAMES[imh])
@@ -883,7 +883,8 @@ def autosolve_game(timeout=None):
 
         # Sleep for automoves
         if num_automove:
-            print "Sleeping %s automoves" % num_automove
+            if VERBOSE:
+                print "Sleeping %s automoves" % num_automove
             time.sleep(AUTOMOVE_DELAY * num_automove)
 
 
@@ -892,11 +893,10 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Commands
-    commands = parser.add_mutually_exclusive_group(required=True)
-    commands.add_argument('-s', '--save-imgs',
-                          help="saves screenshot snippets to CARD_DIR for "
-                          "identification",
-                          action='store_true')
+    parser.add_argument('-i', '--save-imgs',
+                        help="saves screenshot snippets to CARD_DIR for "
+                        "identification",
+                        action='store_true')
 
     # Options
     parser.add_argument('-s', '--silent',
