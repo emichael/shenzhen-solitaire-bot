@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 """Solver for Shenzhen I/O's solitaire mini-game."""
 
-
-# pylint: disable=C0103
-
-
 import hashlib
 import os
 import sys
@@ -12,7 +8,7 @@ import time
 
 from copy import deepcopy
 from Queue import PriorityQueue
-from random import seed, shuffle
+from random import shuffle
 
 import pyautogui
 import pyscreenshot
@@ -23,7 +19,8 @@ from PIL import Image
 __author__ = 'Ellis Michael'
 
 
-seed(123456)
+# pylint: disable=C0103, R0902, R0912, R0914, R0915, W0631
+
 
 # Solver settings
 TRACEBACK_ENABLED = True
@@ -45,12 +42,14 @@ NUMBER, DRAGON, ROSE, CLEARED = 'N', 'D', 'R', 'C'
 RED, GREEN, BLACK = 'r', 'g', 'b'
 COLORS = [RED, GREEN, BLACK]
 
-# Coordinates
+# Coordinates for screenshots
 X0, Y0, X1, Y1 = 414, 399, 426, 414
 XD, YD = 152, 31
 
 XTOP0, YTOP0, XTOP1, YTOP1 = 1174, 135, 1186, 150
 XTOPD = 152
+
+XROSE0, XROSE1 = 982, 994
 
 XSPACE0, XSPACE1 = 414, 426
 
@@ -58,6 +57,7 @@ def mean(x1, x2):
     """Integer average."""
     return (x1 + x2)/2
 
+# Coordinates for clicking
 X = mean(X0, X1)
 Y = mean(Y0, Y1)
 XTOP = mean(XTOP0, XTOP1)
@@ -72,10 +72,20 @@ XNOWHERE, YNOWHERE = 198, 80
 XNEWG, YNEWG = 1498, 934
 
 
-def save_imgs():
-    pyautogui.moveTo(XNOWHERE, YNOWHERE)
+################################################################################
+# Screenshot, image saving and hashing
+################################################################################
+
+def grab_screenshot():
+    """Grab image of current screen."""
+    click_window()
     time.sleep(.1)
-    img = pyscreenshot.grab()
+    return pyscreenshot.grab()
+
+
+def save_card_imgs():
+    """Save current image squares to CARD_DIR."""
+    img = grab_screenshot()
 
     # Piles
     for xl in range(8):
@@ -85,7 +95,7 @@ def save_imgs():
             card_img.save(os.path.join(CARD_DIR, "%s%s.png" % (xl, yl)))
 
     # Rose
-    rr_card = img.crop((982, 135, 994, 150))
+    rr_card = img.crop((XROSE0, YTOP0, XROSE1, YTOP1))
     rr_card.save(os.path.join(CARD_DIR, "rose_space.png"))
 
     # Spaces
@@ -99,6 +109,10 @@ def img_hash(img):
     """Hash PIL image."""
     return hashlib.md5(img.tobytes()).hexdigest()
 
+
+################################################################################
+# Card object
+################################################################################
 
 class Card(object):
     """Immutable card object."""
@@ -179,6 +193,10 @@ class Card(object):
         return hash(str(self))
 
 
+################################################################################
+# Card utils
+################################################################################
+
 def gen_deck():
     """Generator for all of the cards in a standard deck."""
     yield Card(ROSE)
@@ -190,6 +208,10 @@ def gen_deck():
         for num in range(1, 10):
             yield Card(NUMBER, color, num)
 
+
+################################################################################
+# Board object
+################################################################################
 
 class Board(object):
     """Game board."""
@@ -217,19 +239,20 @@ class Board(object):
                         self.piles[xl].append(res)
 
             # Read rose
-            if Card.from_img(img.crop((982, 135, 994, 150))):
+            if Card.from_img(img.crop((XROSE0, YTOP0, XROSE1, YTOP1))):
                 self.rose_cleared = True
 
             # Read goals
             for xl in range(3):
                 for y_off in range(10):
-                    card_img = img.crop((1174 + xl * 152, 135 - y_off,
-                                         1186 + xl * 152, 150 - y_off))
+                    card_img = img.crop((XTOP0 + xl * XTOPD, YTOP0 - y_off,
+                                         XTOP1 + xl * XTOPD, YTOP1 - y_off))
                     res = Card.from_img(card_img)
                     if res:
                         goal_idx = COLORS.index(res.color)
                         for n in range(1, res.number + 1):
-                            self.goals[goal_idx].append(Card(NUMBER, res.color, n))
+                            self.goals[goal_idx].append(
+                                Card(NUMBER, res.color, n))
                         break
             return
 
@@ -275,9 +298,7 @@ class Board(object):
         # print "Reading spaces and goals"
 
         if not img:
-            pyautogui.moveTo(XNOWHERE, YNOWHERE)
-            time.sleep(.1)
-            img = pyscreenshot.grab()
+            img = grab_screenshot()
 
         # Goals
         self.goals_order = [None for _ in range(3)]
@@ -400,6 +421,7 @@ class Board(object):
                )
 
     def autoclear(self):
+        """If an automatic (game-made) move is available, return that board."""
         # Piles to goals
         for idx, pile in enumerate(self.piles):
             if not pile:
@@ -505,8 +527,8 @@ class Board(object):
 
             new_b = deepcopy(self)
             new_b.spaces.append(new_b.piles[idx].pop())
-            yield new_b, ("Move %s (%s) to spaces" % (self.piles[idx][-1], idx + 1),
-                          UP_SPACES, (idx))
+            yield new_b, ("Move %s (%s) to spaces" %
+                          (self.piles[idx][-1], idx + 1), UP_SPACES, (idx))
 
     def moves_from_spaces(self):
         """Generate all the moves from the spaces, if any legal."""
@@ -515,8 +537,9 @@ class Board(object):
                 if not pile or card.goes_on(pile[-1]):
                     new_b = deepcopy(self)
                     new_b.piles[pdx].append(new_b.spaces.pop(sdx))
-                    yield new_b, ("Move %s from spaces down to %s" % (card, pdx + 1),
-                                  DOWN_SPACES, (str(card), pdx))
+                    yield new_b, ("Move %s from spaces down to %s" %
+                                  (card, pdx + 1), DOWN_SPACES,
+                                  (str(card), pdx))
 
     def moves_to_goals(self):
         """Generate all moves to the goal places, if any legal."""
@@ -595,7 +618,7 @@ class Board(object):
                                       PILE, (idx, idy, dst_idx))
 
     def score(self):
-        """Distance from goal."""
+        """Distance from goal heuristic."""
         score = (sum(map(len, self.piles)) + len(self.spaces)) * 0.1
 
         score += 3 - self.colors_cleared
@@ -620,6 +643,99 @@ class Board(object):
 
         return score
 
+
+################################################################################
+# Clicking
+################################################################################
+
+def click_window():
+    """Click in blank spot on window."""
+    if VERBOSE:
+        print "Clicking window"
+    pyautogui.moveTo(XNOWHERE, YNOWHERE)
+    pyautogui.click()
+
+
+def move_piles(src_x, src_y, dst_x, dst_y):
+    """Move card from one pile to another."""
+    if VERBOSE:
+        print "Moving %s, %s to %s, %s" % (
+            src_x + 1, src_y + 1, dst_x + 1, dst_y + 1)
+    pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
+
+    pyautogui.dragTo(X + dst_x * XD, Y + dst_y * YD,
+                     duration=DURATION, button='left')
+
+
+def move_to_spaces(src_x, src_y, dst_x):
+    """Move card from pile to space."""
+    if VERBOSE:
+        print "Moving %s, %s to space %s" % (src_x + 1, src_y + 1, dst_x + 1)
+    pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
+
+    pyautogui.dragTo(XSPACE + dst_x * XTOPD, YTOP,
+                     duration=DURATION, button='left')
+
+
+def move_from_spaces(src_x, dst_x, dst_y):
+    """Move card from space to pile."""
+    if VERBOSE:
+        print "Moving space %s to %s, %s" % (src_x + 1, dst_x + 1, dst_y + 1)
+    pyautogui.moveTo(XSPACE + src_x * XTOPD, YTOP)
+
+    pyautogui.dragTo(X + dst_x * XD, Y + dst_y * YD,
+                     duration=DURATION, button='left')
+
+
+def move_goal_piles(src_x, src_y, dst_x):
+    """Move card from pile to goal."""
+    if VERBOSE:
+        print "Moving %s, %s to goal %s" % (src_x + 1, src_y + 1, dst_x + 1)
+    pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
+
+    pyautogui.dragTo(XTOP + dst_x * XTOPD, YTOP,
+                     duration=DURATION, button='left')
+
+
+def move_goal_spaces(src_x, dst_x):
+    """Move card from space to goal."""
+    if VERBOSE:
+        print "Moving space %s to goal %s" % (src_x + 1, dst_x + 1)
+    pyautogui.moveTo(XSPACE + src_x * XTOPD, YTOP)
+
+    pyautogui.dragTo(XTOP + dst_x * XTOPD, YTOP,
+                     duration=DURATION, button='left')
+
+
+def clear_dragon(color):
+    """Clear dragon cards."""
+    if VERBOSE:
+        print "Clearing %s" % (color)
+    if color == RED:
+        pyautogui.moveTo(XDRAGONR, YDRAGONR)
+    elif color == GREEN:
+        pyautogui.moveTo(XDRAGONG, YDRAGONG)
+    if color == BLACK:
+        pyautogui.moveTo(XDRAGONB, YDRAGONB)
+    pyautogui.mouseDown(button='left')
+    time.sleep(DURATION)
+    pyautogui.mouseUp(button='left')
+
+
+def click_newgame():
+    """Start a new game."""
+    if VERBOSE:
+        print "Clicking newgame"
+    pyautogui.moveTo(XNEWG, YNEWG)
+    pyautogui.mouseDown(button='left')
+    time.sleep(DURATION)
+    pyautogui.mouseUp(button='left')
+    time.sleep(DURATION)
+
+
+################################################################################
+# Solution search and solution playback
+################################################################################
 
 def solve(board, verbose=True, traceback=True, print_tb_boards=True,
           timeout=None):
@@ -682,80 +798,11 @@ def solve(board, verbose=True, traceback=True, print_tb_boards=True,
     return finished
 
 
-def click_window():
-    if VERBOSE:
-        print "Clicking window"
-    pyautogui.moveTo(XNOWHERE, YNOWHERE)
-    pyautogui.click()
-
-def move_piles(src_x, src_y, dst_x, dst_y):
-    if VERBOSE:
-        print "Moving %s, %s to %s, %s" % (src_x + 1, src_y + 1, dst_x + 1, dst_y + 1)
-    pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
-
-    pyautogui.dragTo(X + dst_x * XD, Y + dst_y * YD,
-                     duration=DURATION, button='left')
-
-def move_to_spaces(src_x, src_y, dst_x):
-    if VERBOSE:
-        print "Moving %s, %s to space %s" % (src_x + 1, src_y + 1, dst_x + 1)
-    pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
-
-    pyautogui.dragTo(XSPACE + dst_x * XTOPD, YTOP,
-                     duration=DURATION, button='left')
-
-def move_from_spaces(src_x, dst_x, dst_y):
-    if VERBOSE:
-        print "Moving space %s to %s, %s" % (src_x + 1, dst_x + 1, dst_y + 1)
-    pyautogui.moveTo(XSPACE + src_x * XTOPD, YTOP)
-
-    pyautogui.dragTo(X + dst_x * XD, Y + dst_y * YD,
-                     duration=DURATION, button='left')
-
-def move_goal_piles(src_x, src_y, dst_x):
-    if VERBOSE:
-        print "Moving %s, %s to goal %s" % (src_x + 1, src_y + 1, dst_x + 1)
-    pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
-
-    pyautogui.dragTo(XTOP + dst_x * XTOPD, YTOP,
-                     duration=DURATION, button='left')
-
-def move_goal_spaces(src_x, dst_x):
-    if VERBOSE:
-        print "Moving space %s to goal %s" % (src_x + 1, dst_x + 1)
-    pyautogui.moveTo(XSPACE + src_x * XTOPD, YTOP)
-
-    pyautogui.dragTo(XTOP + dst_x * XTOPD, YTOP,
-                     duration=DURATION, button='left')
-
-def clear_dragon(color):
-    if VERBOSE:
-        print "Clearing %s" % (color)
-    if color == RED:
-        pyautogui.moveTo(XDRAGONR, YDRAGONR)
-    elif color == GREEN:
-        pyautogui.moveTo(XDRAGONG, YDRAGONG)
-    if color == BLACK:
-        pyautogui.moveTo(XDRAGONB, YDRAGONB)
-    pyautogui.mouseDown(button='left')
-    time.sleep(DURATION)
-    pyautogui.mouseUp(button='left')
-
-def click_newgame():
-    if VERBOSE:
-        print "Clicking newgame"
-    pyautogui.moveTo(XNEWG, YNEWG)
-    pyautogui.mouseDown(button='left')
-    time.sleep(DURATION)
-    pyautogui.mouseUp(button='left')
-    time.sleep(DURATION)
-
-
 def autosolve_game(timeout=None):
+    """Take screenshot, solve the current game, and execute the solution."""
+    board = Board(img=grab_screenshot())
     if VERBOSE:
-        img = pyscreenshot.grab()
-    board = Board(img=img)
-    print board
+        print board
 
     # Solve the board
     finished = solve(board, traceback=False, print_tb_boards=False,
@@ -787,7 +834,7 @@ def autosolve_game(timeout=None):
         # print map(str, board.spaces_order), board.goals_order
         old_board = board
         old_move = move
-        move_msg, move_type, details, num_automove = move
+        _, move_type, details, num_automove = move
 
         # Send command
         if move_type == PILE:
@@ -840,6 +887,7 @@ def autosolve_game(timeout=None):
 
 
 def main():
+    """Parse command line arguments and execute them."""
     while True:
         click_window()
         click_newgame()
