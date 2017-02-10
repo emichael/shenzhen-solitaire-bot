@@ -71,6 +71,30 @@ XDRAGONB, YDRAGONB = 888, 334
 XNOWHERE, YNOWHERE = 198, 80
 XNEWG, YNEWG = 1498, 934
 
+
+def save_imgs():
+    pyautogui.moveTo(XNOWHERE, YNOWHERE)
+    time.sleep(.1)
+    img = pyscreenshot.grab()
+
+    # Piles
+    for xl in range(8):
+        for yl in range(5):
+            card_img = img.crop((X0 + xl * XD, Y0 + yl * YD,
+                                 X1 + xl * XD, Y1 + yl * YD))
+            card_img.save(os.path.join(CARD_DIR, "%s%s.png" % (xl, yl)))
+
+    # Rose
+    rr_card = img.crop((982, 135, 994, 150))
+    rr_card.save(os.path.join(CARD_DIR, "rose_space.png"))
+
+    # Spaces
+    for xl in range(3):
+        card_img = img.crop((XSPACE0 + xl * XTOPD, YTOP0,
+                             XSPACE1 + xl * XTOPD, YTOP1))
+        card_img.save(os.path.join(CARD_DIR, "space%s.png" % xl))
+
+
 def img_hash(img):
     """Hash PIL image."""
     return hashlib.md5(img.tobytes()).hexdigest()
