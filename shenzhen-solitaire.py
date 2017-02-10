@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Solver for Shenzhen I/O's solitaire mini-game."""
 
+import argparse
 import hashlib
 import os
 import sys
@@ -887,13 +888,36 @@ def autosolve_game(timeout=None):
 
 
 def main():
-    """Parse command line arguments and execute them."""
-    while True:
-        click_window()
-        click_newgame()
-        time.sleep(6)
-        autosolve_game(timeout=120)
-        time.sleep(4)
+    """Parse command line arguments and execute."""
+    parser = argparse.ArgumentParser()
+
+    # Commands
+    commands = parser.add_mutually_exclusive_group(required=True)
+    commands.add_argument('-s', '--save-imgs',
+                          help="saves screenshot snippets to CARD_DIR for "
+                          "identification",
+                          action='store_true')
+
+    # Options
+    parser.add_argument('-s', '--silent',
+                        help="don't print out progress messages",
+                        action='store_true')
+
+    args = parser.parse_args()
+
+    global VERBOSE # pylint: disable=W0603
+    VERBOSE = not args.silent
+
+    if args.save_imgs:
+        save_card_imgs()
+    else:
+        # Solve games in a loop
+        while True:
+            click_window()
+            click_newgame()
+            time.sleep(6)
+            autosolve_game(timeout=120)
+            time.sleep(4)
 
 
 if __name__ == '__main__':
