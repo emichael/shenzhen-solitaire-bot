@@ -4,7 +4,7 @@ SHENZHEN I/O Solitaire Bot
 This is a bot for the solitaire game in Zachtronics's
 [SHENZHEN I/O](http://www.zachtronics.com/shenzhen-io/). Because this solitaire
 variant is full-information and deterministic, the bot can use a
-straight-forward A* implementation (with an admittedly simple heuristic).
+straight-forward search algorithm (with an admittedly simple heuristic).
 
 ## Requirements
 
