@@ -8,7 +8,7 @@ import sys
 import time
 
 from copy import deepcopy
-from Queue import PriorityQueue
+from queue import PriorityQueue
 from random import shuffle
 
 import pyautogui
@@ -74,6 +74,27 @@ XDRAGONB, YDRAGONB = 888, 334
 XNOWHERE, YNOWHERE = 198, 80
 XNEWG, YNEWG = 1498, 934
 
+
+# https://docs.python.org/3/library/queue.html#queue.PriorityQueue
+# If the data elements are not comparable,
+# the data can be wrapped in a class that
+# ignores the data item and only compares
+# the priority number:
+from dataclasses import dataclass, field
+from typing import Any
+
+@dataclass(order=True)
+class PrioritizedItem:
+    priority: int
+    item: Any=field(compare=False)
+
+    def __iter__(self):
+        """
+        Allow unpacking of PrioritizedItem a-la
+        priority, item = PrioritizedItem(...)
+        """
+        yield self.priority
+        yield self.item
 
 ################################################################################
 # Screenshot, image saving and hashing
@@ -750,7 +771,7 @@ def solve(board, verbose=True, traceback=True, print_tb_boards=True,
 
     seen = set([board])
     queue = PriorityQueue()
-    queue.put((board.score(), board))
+    queue.put(PrioritizedItem(board.score(), board))
     finished = None
 
     last_time = None
@@ -786,7 +807,7 @@ def solve(board, verbose=True, traceback=True, print_tb_boards=True,
                     break
 
                 seen.add(next_b)
-                queue.put((next_b.score(), next_b))
+                queue.put(PrioritizedItem(next_b.score(), next_b))
 
     # Print end stats
     if verbose:
