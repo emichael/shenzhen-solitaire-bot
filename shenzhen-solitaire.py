@@ -81,7 +81,10 @@ def grab_screenshot():
     """Grab image of current screen."""
     click_window()
     time.sleep(.1)
-    return pyscreenshot.grab()
+    img = sct.grab(sct.monitors[2])
+    print("Screenshot: ", img)
+    pil_img = Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
+    return pil_img
 
 
 def save_card_imgs():
