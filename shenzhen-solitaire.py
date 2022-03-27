@@ -19,6 +19,7 @@ from PIL import Image
 
 __author__ = 'Ellis Michael'
 
+pyautogui.MINIMUM_SLEEP = 0.01  # lets pag do smoother movements
 
 # pylint: disable=C0103, R0902, R0912, R0914, R0915, W0631
 
