@@ -166,15 +166,15 @@ class Card(object):
         """Produce a card from a string."""
         assert len(string) == 2
 
-        if string[0] == 'R':
+        if string[0] == ROSE:
             return Card(ROSE)
 
-        if string[1] == 'C':
+        if string[1] == CLEARED:
             return Card(CLEARED)
 
         color = string[0]
 
-        if string[1] == 'D':
+        if string[1] == DRAGON:
             return Card(DRAGON, color)
 
         return Card(NUMBER, color, int(string[1]))
