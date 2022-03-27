@@ -12,7 +12,7 @@ from Queue import PriorityQueue
 from random import shuffle
 
 import pyautogui
-import pyscreenshot
+import mss
 
 from PIL import Image
 
@@ -22,6 +22,7 @@ __author__ = 'Ellis Michael'
 
 # pylint: disable=C0103, R0902, R0912, R0914, R0915, W0631
 
+sct = mss.mss()
 
 # Solver settings
 TRACEBACK_ENABLED = True
