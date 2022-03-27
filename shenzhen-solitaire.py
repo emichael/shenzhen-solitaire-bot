@@ -266,7 +266,7 @@ class Board(object):
 
         assert len(deck) == 40
 
-        self.piles = [deck[i:i+5] for i in xrange(0, 40, 5)]
+        self.piles = [deck[i:i+5] for i in range(0, 40, 5)]
         assert sum(map(len, self.piles)) == 40
 
     def num_goals_started(self):
@@ -328,7 +328,7 @@ class Board(object):
         """Human-readable representation of the board."""
         spaces_s = ' '.join(
             ['XX'] * self.colors_cleared +
-            map(str, self.spaces) +
+            list(map(str, self.spaces)) +
             ['__'] * (3 - self.colors_cleared - len(self.spaces))
         )
         assert len(spaces_s) == 8
@@ -509,16 +509,16 @@ class Board(object):
 
     def print_trace(self, print_board=True):
         """Print trace of how state was generated."""
-        print '-' * 80
+        print('-' * 80)
         board = self
         while board.previous:
             # pylint: disable=E0633
             board, move = board.previous
             move_msg, _, _, _ = move
-            print move_msg
+            print(move_msg)
             if print_board:
-                print board
-        print '-' * 80
+                print(board)
+        print('-' * 80)
 
     def moves_to_spaces(self):
         """Generate all the moves to the spaces, if any legal."""
@@ -655,7 +655,7 @@ class Board(object):
 def click_window():
     """Click in blank spot on window."""
     if VERBOSE:
-        print "Clicking window"
+        print("Clicking window")
     pyautogui.moveTo(XNOWHERE, YNOWHERE)
     pyautogui.click()
 
@@ -663,8 +663,8 @@ def click_window():
 def move_piles(src_x, src_y, dst_x, dst_y):
     """Move card from one pile to another."""
     if VERBOSE:
-        print "Moving %s, %s to %s, %s" % (
-            src_x + 1, src_y + 1, dst_x + 1, dst_y + 1)
+        print("Moving %s, %s to %s, %s" % (
+            src_x + 1, src_y + 1, dst_x + 1, dst_y + 1))
     pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
 
     pyautogui.dragTo(X + dst_x * XD, Y + dst_y * YD,
@@ -674,7 +674,7 @@ def move_piles(src_x, src_y, dst_x, dst_y):
 def move_to_spaces(src_x, src_y, dst_x):
     """Move card from pile to space."""
     if VERBOSE:
-        print "Moving %s, %s to space %s" % (src_x + 1, src_y + 1, dst_x + 1)
+        print("Moving %s, %s to space %s" % (src_x + 1, src_y + 1, dst_x + 1))
     pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
 
     pyautogui.dragTo(XSPACE + dst_x * XTOPD, YTOP,
@@ -684,7 +684,7 @@ def move_to_spaces(src_x, src_y, dst_x):
 def move_from_spaces(src_x, dst_x, dst_y):
     """Move card from space to pile."""
     if VERBOSE:
-        print "Moving space %s to %s, %s" % (src_x + 1, dst_x + 1, dst_y + 1)
+        print("Moving space %s to %s, %s" % (src_x + 1, dst_x + 1, dst_y + 1))
     pyautogui.moveTo(XSPACE + src_x * XTOPD, YTOP)
 
     pyautogui.dragTo(X + dst_x * XD, Y + dst_y * YD,
@@ -694,7 +694,7 @@ def move_from_spaces(src_x, dst_x, dst_y):
 def move_goal_piles(src_x, src_y, dst_x):
     """Move card from pile to goal."""
     if VERBOSE:
-        print "Moving %s, %s to goal %s" % (src_x + 1, src_y + 1, dst_x + 1)
+        print("Moving %s, %s to goal %s" % (src_x + 1, src_y + 1, dst_x + 1))
     pyautogui.moveTo(X + src_x * XD, Y + src_y * YD)
 
     pyautogui.dragTo(XTOP + dst_x * XTOPD, YTOP,
@@ -704,7 +704,7 @@ def move_goal_piles(src_x, src_y, dst_x):
 def move_goal_spaces(src_x, dst_x):
     """Move card from space to goal."""
     if VERBOSE:
-        print "Moving space %s to goal %s" % (src_x + 1, dst_x + 1)
+        print("Moving space %s to goal %s" % (src_x + 1, dst_x + 1))
     pyautogui.moveTo(XSPACE + src_x * XTOPD, YTOP)
 
     pyautogui.dragTo(XTOP + dst_x * XTOPD, YTOP,
@@ -714,7 +714,7 @@ def move_goal_spaces(src_x, dst_x):
 def clear_dragon(color):
     """Clear dragon cards."""
     if VERBOSE:
-        print "Clearing %s" % (color)
+        print("Clearing %s" % (color))
     if color == RED:
         pyautogui.moveTo(XDRAGONR, YDRAGONR)
     elif color == GREEN:
@@ -729,7 +729,7 @@ def clear_dragon(color):
 def click_newgame():
     """Start a new game."""
     if VERBOSE:
-        print "Clicking newgame"
+        print("Clicking newgame")
     pyautogui.moveTo(XNEWG, YNEWG)
     pyautogui.mouseDown(button='left')
     time.sleep(DURATION)
@@ -760,7 +760,7 @@ def solve(board, verbose=True, traceback=True, print_tb_boards=True,
         # Check timeout
         if timeout and time.time() - start > timeout:
             if verbose:
-                print "\nTiming out, no solution found."
+                print("\nTiming out, no solution found.")
             return None
 
         # Print out status if necessary
@@ -792,12 +792,12 @@ def solve(board, verbose=True, traceback=True, print_tb_boards=True,
         sys.stdout.flush()
 
         if finished:
-            print "Solution found."
+            print("Solution found.")
             if traceback and TRACEBACK_ENABLED:
-                print "Printing traceback..."
+                print("Printing traceback...")
                 finished.print_trace(print_board=print_tb_boards)
         else:
-            print "No solution found."
+            print("No solution found.")
 
     return finished
 
@@ -806,7 +806,7 @@ def autosolve_game(timeout=None):
     """Take screenshot, solve the current game, and execute the solution."""
     board = Board(img=grab_screenshot())
     if VERBOSE:
-        print board
+        print(board)
 
     # Solve the board
     finished = solve(board, traceback=False, print_tb_boards=False,
@@ -887,7 +887,7 @@ def autosolve_game(timeout=None):
         # Sleep for automoves
         if num_automove:
             if VERBOSE:
-                print "Sleeping %s automoves" % num_automove
+                print("Sleeping %s automoves" % num_automove)
             time.sleep(AUTOMOVE_DELAY * num_automove)
 
 
