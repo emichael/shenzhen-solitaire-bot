@@ -15,7 +15,6 @@ import pyautogui
 
 from PIL import Image, ImageGrab
 
-
 __author__ = 'Ellis Michael'
 
 pyautogui.MINIMUM_SLEEP = 0.01  # lets pag do smoother movements
@@ -43,6 +42,7 @@ RED, GREEN, BLACK = 'r', 'g', 'b'
 COLORS = [RED, GREEN, BLACK]
 
 # Coordinates for screenshots
+SCREENSHOT_BOUNDING_BOX = (0, 0, 1920, 1080)
 X0, Y0, X1, Y1 = 414, 399, 426, 414
 XD, YD = 152, 31
 
@@ -101,7 +101,7 @@ def grab_screenshot():
     """Grab image of current screen."""
     click_window()
     time.sleep(.1)
-    return ImageGrab.grab(bbox=(0,0,1920,1080))
+    return ImageGrab.grab(bbox=SCREENSHOT_BOUNDING_BOX)
 
 
 def save_card_imgs():
