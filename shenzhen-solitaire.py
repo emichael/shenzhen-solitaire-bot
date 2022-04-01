@@ -12,9 +12,8 @@ from queue import PriorityQueue
 from random import shuffle
 
 import pyautogui
-import mss
 
-from PIL import Image
+from PIL import Image, ImageGrab
 
 
 __author__ = 'Ellis Michael'
@@ -22,8 +21,6 @@ __author__ = 'Ellis Michael'
 pyautogui.MINIMUM_SLEEP = 0.01  # lets pag do smoother movements
 
 # pylint: disable=C0103, R0902, R0912, R0914, R0915, W0631
-
-sct = mss.mss()
 
 # Solver settings
 TRACEBACK_ENABLED = True
@@ -104,10 +101,7 @@ def grab_screenshot():
     """Grab image of current screen."""
     click_window()
     time.sleep(.1)
-    img = sct.grab(sct.monitors[2])
-    print("Screenshot: ", img)
-    pil_img = Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
-    return pil_img
+    return ImageGrab.grab(bbox=(0,0,1920,1080))
 
 
 def save_card_imgs():
