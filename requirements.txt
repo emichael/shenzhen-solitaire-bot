@@ -1,3 +1,2 @@
-PyAutoGUI==0.9.33
-pyscreenshot==0.4.2
-Pillow==3.1.2
+PyAutoGUI>=0.9.33
+Pillow>=9.0.1
